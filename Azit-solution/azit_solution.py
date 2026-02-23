@@ -5,61 +5,74 @@ from azit_ser import DB, DB_CONFIG
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("회원 관리")
+        self.setWindowTitle("자원 관리")
         self.db = DB(**DB_CONFIG)
 
-        # 중앙 위젯 및 레이아웃
         central = QWidget()
         self.setCentralWidget(central)
         vbox = QVBoxLayout(central)
 
-        # 상단: 입력 폼 + 추가 버튼
+        # 입력 필드
         form_box = QHBoxLayout()
-        self.input_name = QLineEdit()
-        self.input_email = QLineEdit()
-        self.btn_add = QPushButton("추가")
-        self.btn_add.clicked.connect(self.add_member)
 
-        form_box.addWidget(QLabel("이름"))
+        self.input_name = QLineEdit()
+        self.input_carl = QLineEdit()
+        self.input_cars = QLineEdit()
+        self.input_q = QLineEdit()
+        self.input_p = QLineEdit()
+        self.input_lot = QLineEdit()
+        self.input_log = QLineEdit()
+
+        self.btn_add = QPushButton("추가")
+        self.btn_add.clicked.connect(self.add_asset)
+
+        form_box.addWidget(QLabel("제품명"))
         form_box.addWidget(self.input_name)
-        form_box.addWidget(QLabel("이메일"))
-        form_box.addWidget(self.input_email)
+        form_box.addWidget(QLabel("대분류"))
+        form_box.addWidget(self.input_carl)
+        form_box.addWidget(QLabel("소분류"))
+        form_box.addWidget(self.input_cars)
+        form_box.addWidget(QLabel("갯수"))
+        form_box.addWidget(self.input_q)
+        form_box.addWidget(QLabel("가격"))
+        form_box.addWidget(self.input_p)
+        form_box.addWidget(QLabel("로트"))
+        form_box.addWidget(self.input_lot)
+        form_box.addWidget(QLabel("로그"))
+        form_box.addWidget(self.input_log)
         form_box.addWidget(self.btn_add)
 
-        # 중앙: 테이블 위젯
+        # 테이블
         self.table = QTableWidget()
-        self.table.setColumnCount(3)
-        self.table.setHorizontalHeaderLabels(["ID", "이름", "이메일"])
-        self.table.setEditTriggers(self.table.NoEditTriggers)  # 표준 예시: 목록은 읽기 전용
+        self.table.setColumnCount(8)
+        self.table.setHorizontalHeaderLabels(
+            ["ID", "제품명", "대분류", "소분류", "갯수", "가격", "로트", "로그"]
+        )
         self.table.verticalHeader().setVisible(False)
 
-        # 배치
         vbox.addLayout(form_box)
         vbox.addWidget(self.table)
 
-        # 초기 데이터 로드
-        self.load_members()
+        self.load_assets()
 
-    def load_members(self):
-        rows = self.db.fetch_members()
+    def load_assets(self):
+        rows = self.db.fetch_assets()  # 🔥 assets용 함수로 변경
         self.table.setRowCount(len(rows))
-        for r, (mid, name, email) in enumerate(rows):
-            self.table.setItem(r, 0, QTableWidgetItem(str(mid)))
-            self.table.setItem(r, 1, QTableWidgetItem(name))
-            self.table.setItem(r, 2, QTableWidgetItem(email))
+        for r, row in enumerate(rows):
+            for c, value in enumerate(row):
+                self.table.setItem(r, c, QTableWidgetItem(str(value)))
         self.table.resizeColumnsToContents()
 
-    def add_member(self):
+    def add_asset(self):
         name = self.input_name.text().strip()
-        email = self.input_email.text().strip()
-        if not name or not email:
-            QMessageBox.warning(self, "오류", "이름과 이메일을 모두 입력하세요.")
+        carl = self.input_carl.text().strip()
+        cars = self.input_cars.text().strip()
+        q = self.input_q.text().strip()
+        p = self.input_p.text().strip()
+        lot = self.input_lot.text().strip()
+        log = self.input_log.text().strip()
+        if not name:
+            QMessageBox.warning(self, "오류", "제품명을 입력하세요.")
             return
-        ok = self.db.insert_member(name, email)
-        if ok:
-            QMessageBox.information(self, "완료", "추가되었습니다.")
-            self.input_name.clear()
-            self.input_email.clear()
-            self.load_members()
-        else:
-            QMessageBox.critical(self, "실패", "추가 중 오류가 발생했습니다.")
+        self.db.insert_asset(name, carl, cars, q, p, lot, log)
+        self.load_assets()

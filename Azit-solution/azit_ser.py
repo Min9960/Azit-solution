@@ -4,10 +4,9 @@ DB_CONFIG = dict(
     host="localhost",
     user="root",
     password="0000",
-    database="sampledb",
-    charset="utf8"
+    database="myazit",
+    charset="utf8mb4"
 )
-
 class DB:
     def __init__(self, **config):
         self.config = config
@@ -15,32 +14,42 @@ class DB:
     def connect(self):
         return pymysql.connect(**self.config)
 
-    # 로그인 검증
-    def verify_user(self, username, password):
-        sql = "SELECT COUNT(*) FROM users WHERE username=%s AND password=%s"
-        with self.connect() as conn:
-            with conn.cursor() as cur:
-                cur.execute(sql, (username, password))
-                count, = cur.fetchone()
-                return count == 1
+    # 공통 실행 (INSERT, UPDATE, DELETE)
+    def execute(self, sql, params=None):
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(sql, params)
+            conn.commit()
+        finally:
+            conn.close()
 
-    # 멤버 전체 조회
-    def fetch_members(self):
-        sql = "SELECT id, name, email FROM members ORDER BY id"
-        with self.connect() as conn:
-            with conn.cursor() as cur:
-                cur.execute(sql)
-                return cur.fetchall()  # [(id, name, email), ...]
+    # 공통 조회 (SELECT)
+    def execute_all(self, sql, params=None):
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(sql, params)
+                return cursor.fetchall()
+        finally:
+            conn.close()
 
-    # 멤버 추가
-    def insert_member(self, name, email):
-        sql = "INSERT INTO members (name, email) VALUES (%s, %s)"
-        with self.connect() as conn:
-            try:
-                with conn.cursor() as cur:
-                    cur.execute(sql, (name, email))
-                conn.commit()
-                return True
-            except Exception:
-                conn.rollback()
-                return False
+    # assets 전체 조회
+    def fetch_assets(self):
+        sql = """
+        SELECT id, product_name, category_large,
+               category_small, quantity, price,
+               lot_number, created_at
+        FROM assets
+        """
+        return self.execute_all(sql)
+
+    # assets 추가
+    def insert_asset(self, name, carl, cars, q, p, lot, log):
+        sql = """
+        INSERT INTO assets
+        (product_name, category_large, category_small,
+         quantity, price, lot_number)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        self.execute(sql, (name, carl, cars, q, p, lot))
