@@ -44,7 +44,7 @@ class DB:
         """
         return self.execute_all(sql)
 
-    # assets 추가
+    #추가
     def insert_asset(self, name, carl, cars, q, p, lot, log):
         sql = """
         INSERT INTO assets
@@ -53,3 +53,21 @@ class DB:
         VALUES (%s, %s, %s, %s, %s, %s)
         """
         self.execute(sql, (name, carl, cars, q, p, lot))
+
+    #수정
+    def update_asset(self, asset_id, name, carl, cars, q, p, lot):
+        sql = """
+        UPDATE assets
+        SET product_name = %s,
+            category_large = %s,
+            category_small = %s,
+            quantity = %s,
+            price = %s,
+            lot_number = %s
+        WHERE id = %s
+        """
+        self.execute(sql, (name, carl, cars, q, p, lot, asset_id))
+    #삭제
+    def delete_asset(self, asset_id):
+        sql = "DELETE FROM assets WHERE id = %s"
+        self.execute(sql, (asset_id,))
